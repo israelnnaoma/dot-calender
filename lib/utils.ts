@@ -118,7 +118,24 @@ export interface WallpaperParams {
   birthdate: Date | null
   bg: string | null
 }
-
+/**
+ * Get today's date in a given IANA timezone (e.g. America/Edmonton).
+ * Falls back to the server date if the timezone is invalid.
+ */
+function todayInTimeZone(tz: string): Date {
+  try {
+    // The en-CA locale formats dates as YYYY-MM-DD
+    const ymd = new Intl.DateTimeFormat('en-CA', {
+      timeZone: tz,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date())
+    return parseLocalDate(ymd)
+  } catch {
+    return new Date()
+  }
+}
 /**
  * Parse a date string (YYYY-MM-DD) into a Date object in local time
  */
@@ -144,7 +161,7 @@ export function getParams(url: string): WallpaperParams {
     width: parseInt(u.searchParams.get('width') || String(DEFAULTS.WIDTH)),
     height: parseInt(u.searchParams.get('height') || String(DEFAULTS.HEIGHT)),
     theme,
-    date: dateParam ? parseLocalDate(dateParam) : new Date(),
+    date: dateParam ? parseLocalDate(dateParam) : todayInTimeZone(u.searchParams.get('tz') || 'America/Edmonton'),
     birthdate: birthdateParam ? parseLocalDate(birthdateParam) : null,
     bg: bgParam,
   }
